@@ -1,0 +1,39 @@
+<RCC>
+    <qresource prefix="/new/slike"/>
+    <qresource prefix="/">
+        <file>media/Ab_off.png</file>
+        <file>media/Ab_on.png</file>
+        <file>media/A#_off.png</file>
+        <file>media/A_off.png</file>
+        <file>media/A#_on.png</file>
+        <file>media/A_on.png</file>
+        <file>media/Bb_off.png</file>
+        <file>media/Bb_on.png</file>
+        <file>media/B_off.png</file>
+        <file>media/B_on.png</file>
+        <file>media/C#_off.png</file>
+        <file>media/C_off.png</file>
+        <file>media/C#_on.png</file>
+        <file>media/C_on.png</file>
+        <file>media/Db_off.png</file>
+        <file>media/Db_on.png</file>
+        <file>media/D#_off.png</file>
+        <file>media/D_off.png</file>
+        <file>media/D#_on.png</file>
+        <file>media/D_on.png</file>
+        <file>media/Eb_off.png</file>
+        <file>media/Eb_on.png</file>
+        <file>media/E_off.png</file>
+        <file>media/E_on.png</file>
+        <file>media/F#_off.png</file>
+        <file>media/F_off.png</file>
+        <file>media/F#_on.png</file>
+        <file>media/F_on.png</file>
+        <file>media/Gb_off.png</file>
+        <file>media/Gb_on.png</file>
+        <file>media/G#_off.png</file>
+        <file>media/G_off.png</file>
+        <file>media/G#_on.png</file>
+        <file>media/G_on.png</file>
+    </qresource>
+</RCC>
