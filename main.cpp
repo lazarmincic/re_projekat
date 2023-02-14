@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     Dialog w;
 
-    w.initialize_gpio(); // dugmad i led
+    w.iNit1ialize_gpio(); // dugmad i led
 
 
 
