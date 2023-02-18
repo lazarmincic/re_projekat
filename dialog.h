@@ -15,12 +15,39 @@
 #include <QProgressBar>
 #include <QGraphicsProxyWidget>
 #include <QGraphicsView>
+#include <QSoundEffect>
+#include <QtMultimedia>
+#include <QtMultimediaWidgets>
+//#include <QAudioDevice>
+#include <QMediaPlayer>
+#include <QByteArray>
+#include <QBuffer>
 
+#define _USE_MATH_DEFINES
+
+
+
+#define SAMPLE_RATE 8000
+
+#define FREQ_CONST ((2.0 * M_PI) / SAMPLE_RATE)
+
+#define SPD_MAX_VAL         126
+#define SPD_SAMPLE_SIZE     8
+#define SPD_CODEC           "audio/pcm"
 
 #include <iostream>
+#include <math.h>
+#include <cmath>
 using namespace std;
 
-#define REF_RATE 100 // in ms
+
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+
+
+#define REF_RATE 100 // in ms   za tastere
+#define REF_RATE_POT 100 // in ms  // za pot.
 
 
 
@@ -61,12 +88,32 @@ public:
 
     void izbledi_note();
 
-    int ocitaj_pot(); // pot
+    void ocitaj_pot(); // pot
+
+    void discharge();
+    int charge_time();
+    int analogread();
+
+
+
+    int pot_step ;
+
+    const int pot_min = 802;  // eksperimentalni rezultati zavisi od n u niti 2, i masine i broja testova
+    const int pot_max = 10710; // - II -
+    const int bit = 8;  // korak potenciometra - nisam koristio na kraju
+
+    void sviraj_notu_labele(QComboBox *c);
+    void sviraj (int broj_dugmeta);
+
+    void sviraj_frekv (double fre, int sec);
+
+    double jacina_note ();
+
 
 private slots:
 
     void detect_press(); // petlja za detektovanje pritiska
-    void do_on_press(int but_num);  //izv pri pritisku
+
 
     void on_checkBox_on_off_stateChanged(int arg1); //ukljuci-iskljuci ulaz
 
@@ -137,7 +184,8 @@ private slots:
     void move_vslider (int pot_val); //pot
 
 
-
+public slots:
+ void do_on_press(int but_num);  //izv pri pritisku
 
 
 signals:
@@ -145,7 +193,8 @@ signals:
        void minor (); // kad je pritisnuto dugme minor
        void major();
 
-       void pot_value_changed (int pot_value); //pot
+
+       void vrednost_pot (int pot_value);
 
 private:
     Ui::Dialog *ui;
@@ -179,6 +228,13 @@ protected:
 
 
 
+    const int a_pin = 1; //wiringpi
+    const int b_pin = 27;
+
+    QSoundEffect* zvuk = new QSoundEffect ;
+
+    int pot_value = 0;
+
 //   QPixmap *ui_qpixmap;
 //   QThread *ui_qthread;
 //   QMetaObject *ui_qmetaobject;
@@ -186,7 +242,7 @@ protected:
 };
 
 //////////// u drugi h fajl
-
+/*
 class Nit1 : public QObject  //boji
 {
     Q_OBJECT
@@ -196,11 +252,11 @@ public:
 public slots:
     // oboji must emit oboji_finished when it is done.
     void oboji();
-    void citaj_pot();
+
 
 signals:
     void oboji_finished();
-    void citaj_pot_finished();
+
 
 private:
     Dialog* dia;
@@ -208,31 +264,7 @@ private:
 };
 
 
-class Nit2 : public QObject  //ocitava potenciometar
-{
-    Q_OBJECT
-public:
-    Nit2(QDialog *q);
-    ~Nit2();
-public slots:
-    //
-    void doo();
-
-    void discharge();
-    int charge_time();
-    int analogread(); // umesto int qtimer
-
-
-signals:
-    void doo_finished();
-
-private:
-    //var
-    QDialog* qd;
-    const int a_pin = 1; //wiringpi
-    const int b_pin = 27;
-};
-
+*/
 
 
 

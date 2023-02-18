@@ -35,5 +35,12 @@
         <file>media/G_off.png</file>
         <file>media/G#_on.png</file>
         <file>media/G_on.png</file>
+        <file>samples/projekat - A3.wav</file>
+        <file>samples/projekat - B3.wav</file>
+        <file>samples/projekat - C3.wav</file>
+        <file>samples/projekat - D3.wav</file>
+        <file>samples/projekat - E3.wav</file>
+        <file>samples/projekat - F3.wav</file>
+        <file>samples/projekat - G3.wav</file>
     </qresource>
 </RCC>

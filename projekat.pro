@@ -7,6 +7,10 @@
 QT       += core gui
 LIBS += -L/usr/local/lib -lwiringPi
 QT += gui
+QT += multimedia
+QT += widgets multimedia
+QT += widgets
+QT += multimediawidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -28,10 +32,14 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        dialog.cpp
+        dialog.cpp \
+    nit2.cpp \
+    nit1.cpp
 
 HEADERS += \
-        dialog.h
+        dialog.h \
+    nit2.h \
+    nit1.h
 
 FORMS += \
         dialog.ui
@@ -43,3 +51,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     resource_file.qrc
+
+DISTFILES +=

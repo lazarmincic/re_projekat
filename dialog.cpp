@@ -1,6 +1,9 @@
 #include "dialog.h"
 #include "ui_dialog.h"
 
+#include "nit1.h"
+#include "nit2.h"
+
 
 
 Dialog::Dialog(QWidget *parent) :  //konstruktor
@@ -68,7 +71,38 @@ Dialog::Dialog(QWidget *parent) :  //konstruktor
     connect(ui->pushButton_sharpen_7,&QPushButton::clicked,this,&Dialog::on_pushButton_sharpen_7_pritisnuto);
 
 
-    ocitaj_pot(); //
+
+  //  ocitaj_pot(); // mora u tredu!
+
+
+
+    //ocitaj_pot();
+
+
+    connect (this, &Dialog::vrednost_pot, this, &Dialog::move_vslider);
+
+    QThread* thread_p = new QThread( ); // napravi novi tred da bi mogao da obojis labelu
+    Nit2* task_p = new Nit2(this);  //color when pressed in another thread
+    task_p->moveToThread(thread_p);
+
+    Dialog::connect(thread_p, &QThread::started, task_p, &Nit2::sr_vr_pot);
+    connect(task_p, &Nit2::nit2_finished, thread_p, &QThread::quit);
+    connect(task_p, &Nit2::nit2_finished, task_p, &Nit2::deleteLater);
+    connect(thread_p, &QThread::finished, thread_p, &QThread::deleteLater);
+
+    thread_p->start();
+
+
+
+
+    pot_step = (pot_max - pot_min) / bit ; // nisam koristio na kraju
+
+    ui->verticalSlider_1->setRange(pot_min,pot_max);
+
+
+
+
+
 
 
 }
@@ -108,6 +142,8 @@ char Dialog::get_led(int i) const
 
 void Dialog::do_on_press(int but_num)
 {
+
+
     QThread* thread = new QThread( ); // napravi novi tred da bi mogao da obojis labelu
     Nit1* task = new Nit1(this,but_num);  //color when pressed in another thread
     task->moveToThread(thread);
@@ -121,6 +157,8 @@ void Dialog::do_on_press(int but_num)
 
 
     qDebug()<<"Pritisnuto dugme broj "<< but_num;
+
+
 
 
 
@@ -182,7 +220,7 @@ void Dialog::promeni_sliku_labele(QLabel *l,QString s) // ul parametar qstring /
 
  //    slika.load (":media/C_on.png");
 //    l->setPixmap(slika);
- //   qDebug()<<"Izvrsio se setPixmap ";
+    qDebug()<<"Izvrsio se setPixmap ";
 
 }
 
@@ -505,7 +543,7 @@ void Dialog::on_comboBox_scale_currentTextChanged(const QString &arg1)
 //////////////// u drugi cpp fajl
 
 
-
+/*
 Nit1::Nit1(Dialog* d,int bn) {
 
     dia =d;
@@ -526,7 +564,7 @@ void Nit1:: oboji(){
 }
 
 
-
+*/
 
 
 
@@ -688,82 +726,47 @@ void Dialog::on_pushButton_sharpen_7_pritisnuto()
 
 
 
-int Dialog::ocitaj_pot()  // u novom tredu
+void Dialog::ocitaj_pot()
 {
-   /* QThread* thread = new QThread( );
-    Task* task = new Task();
-
-    // move the task object to the thread BEFORE connecting any signal/slots
-    task->moveToThread(thread);
-
-    connect(thread, SIGNAL(started()), task, SLOT(oboji()));
-    connect(task, SIGNAL(oboji_finished()), thread, SLOT(quit()));
-
-    // automatically delete thread and task object when work is done:
-    connect(task, SIGNAL(oboji_finished()), task, SLOT(deleteLater()));
-    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-
-    thread->start(); */
-
-    QThread* thread = new QThread( );
-    Nit2* task = new Nit2(this);
-    task->moveToThread(thread);
-
-    connect(thread, &QThread::started, task, &Nit2::doo);
-    connect(task, &Nit2::doo_finished, thread, &QThread::quit);
-    connect(task, &Nit2::doo_finished, task, &Nit2::deleteLater);
-    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
-
-    thread->start();
 
 
 
 }
 
-void Nit1::citaj_pot()
-{
 
-}
 
 void Dialog::move_vslider (int pot_val)
 {
 
+    this->pot_value = pot_val;
+
+    ui->verticalSlider_1->setEnabled(1);
+
+
+    ui->verticalSlider_1->setValue(pot_val);
+
+    ui->verticalSlider_1->setDisabled(1);
+
+
 }
 
 
-Nit2::Nit2(QDialog *q) //konstr
-    {
-    qd = q;
-    }
-Nit2::~Nit2() //destr.
-    {
-
-    }
 
 
 
-void Nit2::doo() // radi nesto, emituj doo_finished kad si gotov
-{
-    while(1)
-    {
 
-        qDebug()<< analogread();
-                                // obavesti main thread o ovome
-        delay(1000);
 
-    }
-    emit(doo_finished());
-}
-
-void Nit2::discharge()
+void Dialog::discharge()
 {
     pinMode(a_pin,INPUT);
     pinMode(b_pin,OUTPUT);
     digitalWrite(b_pin,0);
     delay(5); // 5ms
+
+
 }
 
-int Nit2::charge_time()
+int Dialog::charge_time()
 {
     pinMode(b_pin,INPUT);
     pinMode(a_pin,OUTPUT);
@@ -775,7 +778,7 @@ int Nit2::charge_time()
 
 }
 
-int Nit2::analogread()
+int Dialog::analogread()
 {
     this->discharge();
     return(this->charge_time());
@@ -784,4 +787,89 @@ int Nit2::analogread()
 
 
 
+void Dialog::sviraj_notu_labele(QComboBox *c)
+{
+    QString ime_sampla ("projekat - ");
+    ime_sampla.append(c->currentText());
+    ime_sampla.append("3");  // slajder za oktavu
+    ime_sampla.append(".wav");
+    ime_sampla.prepend("qrc:///samples/");
+    //qDebug()<<"Ime fajla je" << ime_sampla;
+    QUrl url_sampla= QUrl(ime_sampla);
+    //qDebug()<<url_sampla;
+   // url_sampla = url_sampla.toLocalFile();
+    zvuk->setSource(url_sampla);
+   // zvuk->setLoopCount(1);
+    zvuk->setVolume(1); // podaci sa potenciometra 0-100
+    qDebug ()<<"Jacina note je "<<this->jacina_note();
+    zvuk->setMuted(false);
+    //qDebug()<<"Status "<<zvuk->status();
+    zvuk->play(); // treba da imam dilej onoliko koliko traje nota!!
+  //  delay(750);
 
+}
+
+
+void Dialog::sviraj (int broj_dugmeta)
+{
+
+    switch (broj_dugmeta)
+    {
+        case 1: this->sviraj_notu_labele(ui->comboBox_change_note_1); break;
+        case 2: this->sviraj_notu_labele(ui->comboBox_change_note_2); break;
+        case 3: this->sviraj_notu_labele(ui->comboBox_change_note_3); break;
+        case 4: this->sviraj_notu_labele(ui->comboBox_change_note_4); break;
+        case 5: this->sviraj_notu_labele(ui->comboBox_change_note_5); break;
+        case 6: this->sviraj_notu_labele(ui->comboBox_change_note_6); break;
+        case 7: this->sviraj_notu_labele(ui->comboBox_change_note_7); break;
+
+
+    }
+}
+
+void Dialog::sviraj_frekv (double freq, int sec)
+{
+/*
+
+
+    QByteArray* bytebuf = new QByteArray();
+    bytebuf->resize(sec * SAMPLE_RATE);
+    for (int i=0; i<(sec * SAMPLE_RATE); i++)
+    {
+        qreal t = (qreal)(freq * i);
+        t = t * FREQ_CONST;
+        t = qSin(t);
+        t *= SPD_MAX_VAL;
+        (*bytebuf)[i] = (quint8)t;
+    }
+
+    QBuffer* input = new QBuffer(bytebuf);
+    input->open(QIODevice::ReadOnly);
+
+    QAudioFormat format;
+    format.setSampleRate(SAMPLE_RATE);
+    format.setChannelCount(1);
+    format.setSampleSize(SPD_SAMPLE_SIZE);
+    format.setCodec(SPD_CODEC);
+    format.setByteOrder(QAudioFormat::LittleEndian);
+    format.setSampleType(QAudioFormat::SignedInt);
+
+    QAudioOutput* audio = new QAudioOutput(format, this);
+    audio->start(input);
+
+
+*/
+
+
+}
+
+
+double Dialog:: jacina_note ()
+{
+    int volume = pot_value;
+    if (volume <= pot_min) return 0.0;
+    else if (volume >= pot_max) return 1.0;
+    else {
+        return ((double)volume-(double)pot_min)/(double)pot_max;
+    }
+}
