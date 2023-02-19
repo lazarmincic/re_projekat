@@ -49,6 +49,8 @@ Dialog::Dialog(QWidget *parent) :  //konstruktor
 
     puni_p_meni_major(); // inic vrednost p menija
 
+    ui->comboBox_scale->setCurrentIndex(0); // inic vr
+
     on_pushButton_major_clicked(1); // inic vrednost major dugmeta
 
     connect (this,&Dialog::major,this,&Dialog::puni_p_meni_major);
@@ -101,9 +103,16 @@ Dialog::Dialog(QWidget *parent) :  //konstruktor
 
 
 
+    ui->horizontalSlider_octave->setRange(-1,7); //octave slider
+    ui->horizontalSlider_octave->setValue(3); // pod. vr.
+    ui->horizontalSlider_octave->setTickPosition(QSlider::TicksAbove);
+    ui->horizontalSlider_octave->setTickInterval(1);
+    ui->horizontalSlider_octave->setPageStep(1);
 
+    ui->label_octave->setText("3");
 
-
+    connect(ui->horizontalSlider_octave, &QSlider::valueChanged, this, &Dialog::setuj_tekst);
+    connect(ui->horizontalSlider_octave, &QSlider::valueChanged, this, &Dialog::promeni_oktavu);
 
 }
 
@@ -124,8 +133,10 @@ void Dialog::detect_press() // izvrsava se svakih reff_rate
 {
     for(int i=0;i<8;i++)
     {
-        if (digitalRead(button[i]))
+        if (digitalRead(button[i])){
+
             emit (button_pressed(i)); // 0 pauza 1-7 dugme
+            }
     }
 
 }
@@ -142,7 +153,7 @@ char Dialog::get_led(int i) const
 
 void Dialog::do_on_press(int but_num)
 {
-
+    disconnect (this,&Dialog::button_pressed,this,&Dialog::do_on_press);
 
     QThread* thread = new QThread( ); // napravi novi tred da bi mogao da obojis labelu
     Nit1* task = new Nit1(this,but_num);  //color when pressed in another thread
@@ -220,7 +231,7 @@ void Dialog::promeni_sliku_labele(QLabel *l,QString s) // ul parametar qstring /
 
  //    slika.load (":media/C_on.png");
 //    l->setPixmap(slika);
-    qDebug()<<"Izvrsio se setPixmap ";
+    //qDebug()<<"Izvrsio se setPixmap ";
 
 }
 
@@ -298,6 +309,14 @@ void Dialog::on_radioButton_sharp_clicked(bool checked)
         choose_note(ui->comboBox_change_note_5);
         choose_note(ui->comboBox_change_note_6);
         choose_note(ui->comboBox_change_note_7);
+
+
+        if(ui->pushButton_major->isChecked())
+            puni_p_meni_major();
+        else if(ui->pushButton_minor->isChecked())
+            puni_p_meni_minor();
+
+
     }
 
 }
@@ -314,6 +333,13 @@ void Dialog::on_radioButton_flat_clicked(bool checked)
         choose_note(ui->comboBox_change_note_5);
         choose_note(ui->comboBox_change_note_6);
         choose_note(ui->comboBox_change_note_7);
+
+
+        if(ui->pushButton_major->isChecked())
+            puni_p_meni_major();
+        else if(ui->pushButton_minor->isChecked())
+            puni_p_meni_minor();
+
     }
 
 
@@ -388,6 +414,7 @@ void Dialog::puni_p_meni_minor( ) //slot
 {
     QComboBox *c = new QComboBox ();
     c = ui->comboBox_scale;
+    int index_stari = c->currentIndex();
     if (c->count()!=0) c->clear();
     for (int i=0;i<8;i++) // puni sa minor imenima
     {
@@ -403,12 +430,15 @@ void Dialog::puni_p_meni_minor( ) //slot
             c->insertItem(i+1,string_flat,0);
         }
     }
+
+    c->setCurrentIndex(index_stari);
 }
 
 void Dialog::puni_p_meni_major( ) //slot
 {
     QComboBox *c = new QComboBox ();
     c = ui->comboBox_scale;
+    int index_stari = c->currentIndex();
     if (c->count()!=0) c->clear();
     for (int i=0;i<8;i++) // puni sa minor imenima
     {
@@ -424,6 +454,8 @@ void Dialog::puni_p_meni_major( ) //slot
             c->insertItem(i+1,string_flat,0);
         }
     }
+
+     c->setCurrentIndex(index_stari);
 }
 
 
@@ -738,7 +770,7 @@ void Dialog::ocitaj_pot()
 void Dialog::move_vslider (int pot_val)
 {
 
-    this->pot_value = pot_val;
+    pot_value = pot_val;
 
     ui->verticalSlider_1->setEnabled(1);
 
@@ -789,23 +821,58 @@ int Dialog::analogread()
 
 void Dialog::sviraj_notu_labele(QComboBox *c)
 {
-    QString ime_sampla ("projekat - ");
-    ime_sampla.append(c->currentText());
-    ime_sampla.append("3");  // slajder za oktavu
+    QString ime_sampla ("grand piano  - ");
+    QString temp (c->currentText());
+
+    if (temp[1]=='b')
+        temp = note_names_sharp[c->currentIndex()];
+
+    if (temp[1]=='#')
+        temp[1]='s';
+
+    ime_sampla.append(temp);
+
+    QString scale (ui->comboBox_scale->currentText());
+
+    bool bio_u_petlji = 0;
+    for (int i=0;i<30;i++)
+        if(all_scales[i][0]==scale)
+        {
+            for (int j =0;j<8;j++)
+            {
+                if (all_scales[i][j]==c->currentText())
+                {
+                    if (scale_helper[i][j-1])
+                    {
+                        octave++;
+                        bio_u_petlji = 1;
+                    }
+                }
+            }
+        }
+
+    ime_sampla.append(QString::number(octave));  // slajder za oktavu, zavisi od izabrane oktave
+
+    if (bio_u_petlji){
+        octave--;
+        bio_u_petlji=0;
+    }
     ime_sampla.append(".wav");
-    ime_sampla.prepend("qrc:///samples/");
+    qDebug()<<ime_sampla;
+    //ime_sampla.prepend("qrc:///samples/");  // resource file - previse velik za sve samplove!
+    ime_sampla.prepend("file:///home/pi/Desktop/grand piano/");   // utice preset samples/effects
     //qDebug()<<"Ime fajla je" << ime_sampla;
     QUrl url_sampla= QUrl(ime_sampla);
     //qDebug()<<url_sampla;
-   // url_sampla = url_sampla.toLocalFile();
+   // url_sampla.toLocalFile();
     zvuk->setSource(url_sampla);
    // zvuk->setLoopCount(1);
-    zvuk->setVolume(1); // podaci sa potenciometra 0-100
-    qDebug ()<<"Jacina note je "<<this->jacina_note();
+    zvuk->setVolume(this->jacina_note()); // podaci sa potenciometra 0-1
+    //qDebug ()<<"Jacina note je "<<this->jacina_note();
     zvuk->setMuted(false);
     //qDebug()<<"Status "<<zvuk->status();
     zvuk->play(); // treba da imam dilej onoliko koliko traje nota!!
-  //  delay(750);
+   // delay(750);
 
 }
 
@@ -872,4 +939,27 @@ double Dialog:: jacina_note ()
     else {
         return ((double)volume-(double)pot_min)/(double)pot_max;
     }
+}
+
+void Dialog::setuj_tekst (int broj)
+{
+    QString temp = QString::number(broj);
+    ui->label_octave->setText(temp);
+}
+
+void Dialog::promeni_oktavu (int broj)
+{
+   // qDebug()<<"Slajder pomeren, vrednost "<<broj;
+    octave = broj;
+}
+
+
+void Dialog::upali_diodu(int i)
+{
+    digitalWrite(led[i],1);
+}
+
+void Dialog::ugasi_diodu(int i)
+{
+    digitalWrite(led[i],0);
 }

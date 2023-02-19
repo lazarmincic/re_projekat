@@ -23,6 +23,9 @@
 #include <QByteArray>
 #include <QBuffer>
 
+#include <stdio.h>
+#include <string.h>
+
 #define _USE_MATH_DEFINES
 
 
@@ -109,6 +112,9 @@ public:
 
     double jacina_note ();
 
+    void upali_diodu(int i); // 0- crvena, 1- zelena, 2- plava
+    void ugasi_diodu(int i);
+
 
 private slots:
 
@@ -183,6 +189,10 @@ private slots:
 
     void move_vslider (int pot_val); //pot
 
+    void setuj_tekst (int broj); //za labelu oktave
+
+    void promeni_oktavu (int broj);
+
 
 public slots:
  void do_on_press(int but_num);  //izv pri pritisku
@@ -223,6 +233,13 @@ protected:
                                         {"B Major","B","C#","D#","E","F#","G#","A#"},{"F# Major","F#","G#","A#","B","C#","D#","F"},{"C# Major","C#","D#","F","F#","G#","A#","C"}
                                               };
 
+    const bool scale_helper [30][7] = {{0,0,1,1,1,1,1},{0,0,0,0,0,0,1},{0,0,0,1,1,1,1},{0,0,0,0,0,0,0},{0,0,0,0,1,1,1},{0,0,0,1,1,1,1},
+                                       {0,0,0,0,0,0,1},{0,1,1,1,1,1,1},{0,0,0,0,0,1,1},{0,1,1,1,1,1,1},{0,0,0,0,1,1,1},{0,0,0,0,0,0,0},{0,0,0,1,1,1,1},{0,0,0,0,0,0,1},{0,1,1,1,1,1,1},
+
+                                       {0,0,0,0,0,0,0},{0,0,0,0,1,1,1},{0,1,1,1,1,1,1},{0,0,0,0,0,1,1},{0,0,1,1,1,1,1},{0,1,1,1,1,1,1},{0,0,0,0,1,1,1},{0,0,0,0,0,0,1},{0,0,0,0,0,0,1},
+                                       {0,0,0,0,0,1,1},{0,0,0,1,1,1,1},{0,0,1,1,1,1,1},{0,1,1,1,1,1,1},{0,0,0,0,1,1,1},{0,0,0,0,0,0,1}
+                                      }; //ide istim redosledom kao i all_scales, pa ne mora biti char. ako je 0 - skala se ne menja, ako je 1, menja se za +1
+
     mode mod = moNit1or;
     note_mode sharp_or_flat = sharp;
 
@@ -234,6 +251,10 @@ protected:
     QSoundEffect* zvuk = new QSoundEffect ;
 
     int pot_value = 0;
+
+
+    int octave = 3;
+
 
 //   QPixmap *ui_qpixmap;
 //   QThread *ui_qthread;
