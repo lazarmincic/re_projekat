@@ -28,7 +28,7 @@
 
 #define _USE_MATH_DEFINES
 
-
+#define BUFFER 20 // za rec mod
 
 #define SAMPLE_RATE 8000
 
@@ -101,6 +101,12 @@ public:
 
     int pot_step ;
 
+    bool test_mode_on = 0;
+    bool rec_mode_on = 0;
+    bool play_mode_on = 0;
+
+
+
     const int pot_min = 802;  // eksperimentalni rezultati zavisi od n u niti 2, i masine i broja testova
     const int pot_max = 10710; // - II -
     const int bit = 8;  // korak potenciometra - nisam koristio na kraju
@@ -108,12 +114,33 @@ public:
     void sviraj_notu_labele(QComboBox *c);
     void sviraj (int broj_dugmeta);
 
-    void sviraj_frekv (double fre, int sec);
+
 
     double jacina_note ();
 
+
+
     void upali_diodu(int i); // 0- crvena, 1- zelena, 2- plava
     void ugasi_diodu(int i);
+
+    void inic_memorije ();
+
+    double scale_volume (double volumeslider);
+
+
+
+    bool thread_fin = 0;
+
+    int odsvirano_memory_n = 0;
+
+    int i_play = 0;
+
+    int odsvirano_memory[BUFFER]; // rec mod, 20 nota pamti
+
+    int i_mem = 0;
+
+    void pisi_u_mem (bool recording, int but);
+
 
 
 private slots:
@@ -194,8 +221,27 @@ private slots:
     void promeni_oktavu (int broj);
 
 
+    void bira_samplove (int index);
+
+    void test_mod (bool pritisnuto);
+
+
+
+
+    void rec_mod (bool pritisnuto);
+
+    void play_mod (bool pritisnuto);
+
+
+    void thread_done ();
+
+    void sviraj_pauzu();
+
+
 public slots:
  void do_on_press(int but_num);  //izv pri pritisku
+
+ void dugme_pritisnuto (int dugme);
 
 
 signals:
@@ -254,6 +300,26 @@ protected:
 
 
     int octave = 3;
+
+
+    const QStringList sample_names = {"Grand Piano","Modern Upright","Maple Hill Funk","Voodoo Magic","Industrial Pad","Current Value H"};
+
+    int sample_izabran = 0;
+
+
+    int tacan_odgovor = 0;
+
+
+
+
+
+
+    //QList <QMediaContent> lista;
+
+    QMediaPlaylist* playlist = new QMediaPlaylist(this);
+
+
+
 
 
 //   QPixmap *ui_qpixmap;

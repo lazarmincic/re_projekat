@@ -114,6 +114,28 @@ Dialog::Dialog(QWidget *parent) :  //konstruktor
     connect(ui->horizontalSlider_octave, &QSlider::valueChanged, this, &Dialog::setuj_tekst);
     connect(ui->horizontalSlider_octave, &QSlider::valueChanged, this, &Dialog::promeni_oktavu);
 
+
+    ui->comboBox_samples->addItems(sample_names);
+    ui->comboBox_samples->setCurrentIndex(0);
+
+    connect(ui->comboBox_samples, SIGNAL(currentIndexChanged(int)),this,SLOT(bira_samplove(int)));
+
+
+
+
+    connect(ui->pushButton_test, SIGNAL(toggled(bool)),this,SLOT(test_mod(bool)));
+
+
+    connect (this,&Dialog::button_pressed,this,&Dialog::dugme_pritisnuto);
+
+    connect (ui->pushButton_rec,&QPushButton::toggled,this,&Dialog::rec_mod);
+
+
+    connect (ui->pushButton_play,&QPushButton::toggled,this,&Dialog::play_mod);
+
+
+    this->inic_memorije(); // inic. dva pom. niza za rec mod
+
 }
 
 
@@ -154,6 +176,8 @@ char Dialog::get_led(int i) const
 void Dialog::do_on_press(int but_num)
 {
     disconnect (this,&Dialog::button_pressed,this,&Dialog::do_on_press);
+   // disconnect (this,&Dialog::button_pressed,this,&Dialog::dugme_pritisnuto);
+
 
     QThread* thread = new QThread( ); // napravi novi tred da bi mogao da obojis labelu
     Nit1* task = new Nit1(this,but_num);  //color when pressed in another thread
@@ -164,8 +188,13 @@ void Dialog::do_on_press(int but_num)
     connect(task, &Nit1::oboji_finished, task, &Nit1::deleteLater);
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
+    connect(thread, &QThread::finished,this,&Dialog::thread_done);
+
+
+
     thread->start();
 
+    thread_fin = 0;
 
     qDebug()<<"Pritisnuto dugme broj "<< but_num;
 
@@ -821,7 +850,16 @@ int Dialog::analogread()
 
 void Dialog::sviraj_notu_labele(QComboBox *c)
 {
-    QString ime_sampla ("grand piano  - ");
+    QString ime_sampla;
+    if (sample_izabran==0)  ime_sampla = "grand piano/grand piano  - ";
+    else if (sample_izabran==1)  ime_sampla = "modern upright/modern upright - ";
+    else if (sample_izabran==2)  ime_sampla = "maple hill funk/maple hill funk - ";
+    else if (sample_izabran==3)  ime_sampla = "voodoo magic/voodoo magic - ";
+    else if (sample_izabran==4)  ime_sampla = "industrial pad/industrial pad - ";
+    else if (sample_izabran==5)  ime_sampla = "current value h/current value h - ";
+
+
+   // QString ime_sampla ("grand piano/grand piano  - ");  // ovde imati razlicite samplove i efekte
     QString temp (c->currentText());
 
     if (temp[1]=='b')
@@ -860,15 +898,25 @@ void Dialog::sviraj_notu_labele(QComboBox *c)
     ime_sampla.append(".wav");
     qDebug()<<ime_sampla;
     //ime_sampla.prepend("qrc:///samples/");  // resource file - previse velik za sve samplove!
-    ime_sampla.prepend("file:///home/pi/Desktop/grand piano/");   // utice preset samples/effects
+    ime_sampla.prepend("file:///home/pi/Desktop/");   // utice preset samples/effects
     //qDebug()<<"Ime fajla je" << ime_sampla;
     QUrl url_sampla= QUrl(ime_sampla);
     //qDebug()<<url_sampla;
    // url_sampla.toLocalFile();
+
+
+    if (rec_mode_on) playlist->addMedia(url_sampla); //puni listu sa odg. url-ovima
+    else if(!playlist->isEmpty())
+    {
+         //qDeleteAll(lista.begin(),lista.end()); nije pok na listu pa ne treba
+         playlist->clear();
+    }
+
+
     zvuk->setSource(url_sampla);
    // zvuk->setLoopCount(1);
     zvuk->setVolume(this->jacina_note()); // podaci sa potenciometra 0-1
-    //qDebug ()<<"Jacina note je "<<this->jacina_note();
+    qDebug ()<<"Jacina note je "<<this->jacina_note();
     zvuk->setMuted(false);
     //qDebug()<<"Status "<<zvuk->status();
     zvuk->play(); // treba da imam dilej onoliko koliko traje nota!!
@@ -889,49 +937,15 @@ void Dialog::sviraj (int broj_dugmeta)
         case 5: this->sviraj_notu_labele(ui->comboBox_change_note_5); break;
         case 6: this->sviraj_notu_labele(ui->comboBox_change_note_6); break;
         case 7: this->sviraj_notu_labele(ui->comboBox_change_note_7); break;
-
+        case 0: this->sviraj_pauzu(); break; // za rec mode
 
     }
 }
 
-void Dialog::sviraj_frekv (double freq, int sec)
-{
-/*
 
 
-    QByteArray* bytebuf = new QByteArray();
-    bytebuf->resize(sec * SAMPLE_RATE);
-    for (int i=0; i<(sec * SAMPLE_RATE); i++)
-    {
-        qreal t = (qreal)(freq * i);
-        t = t * FREQ_CONST;
-        t = qSin(t);
-        t *= SPD_MAX_VAL;
-        (*bytebuf)[i] = (quint8)t;
-    }
 
-    QBuffer* input = new QBuffer(bytebuf);
-    input->open(QIODevice::ReadOnly);
-
-    QAudioFormat format;
-    format.setSampleRate(SAMPLE_RATE);
-    format.setChannelCount(1);
-    format.setSampleSize(SPD_SAMPLE_SIZE);
-    format.setCodec(SPD_CODEC);
-    format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setSampleType(QAudioFormat::SignedInt);
-
-    QAudioOutput* audio = new QAudioOutput(format, this);
-    audio->start(input);
-
-
-*/
-
-
-}
-
-
-double Dialog:: jacina_note ()
+double Dialog:: jacina_note () //izmedju 0 i 1 radi sigurno
 {
     int volume = pot_value;
     if (volume <= pot_min) return 0.0;
@@ -941,6 +955,17 @@ double Dialog:: jacina_note ()
     }
 }
 
+/*
+int Dialog:: jacina_note () //izmedju 0 i 100 ne radi
+{
+    int volume = pot_value;
+    if (volume <= pot_min) return 0;
+    else if (volume >= pot_max) return 100;
+    else {
+        return (int)(((double)volume-(double)pot_min)/((double)pot_max))*100;
+    }
+}
+*/
 void Dialog::setuj_tekst (int broj)
 {
     QString temp = QString::number(broj);
@@ -963,3 +988,346 @@ void Dialog::ugasi_diodu(int i)
 {
     digitalWrite(led[i],0);
 }
+
+
+
+
+void Dialog::bira_samplove (int index){
+
+    sample_izabran = index;
+}
+
+
+void Dialog::test_mod (bool pritisnuto){
+
+    if (pritisnuto) {
+        ui->pushButton_rec->setChecked(0);
+        ui->pushButton_play->setChecked(0); //iskljucivost izmedju tri dugmeta
+
+    test_mode_on = 1;
+    rec_mode_on = 0;
+    play_mode_on = 0;
+        //QMessageBox - za odgovor!
+
+ /*   QMessageBox msgBox (QMessageBox::Question,"Hearing test", "Which note is being played?",QMessageBox::NoButton,this,Qt::Dialog);
+    msgBox.addButton(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok); // enter key pressed
+    msgBox.addButton(QMessageBox::Cancel);
+    msgBox.setEscapeButton(QMessageBox::Cancel); //esc key pressed
+    msgBox.setDetailedText("Press the appropriate button to progress");
+
+*/
+
+   // msgBox.exec();
+
+    QDateTime cd = QDateTime::currentDateTime(); //rand seed
+    qsrand(cd.toTime_t());
+    tacan_odgovor = qrand() % 7 + 1; // od 1 do 7
+    this->sviraj(tacan_odgovor); //
+    this->upali_diodu(2); //plava
+    delay(1000);
+    this->ugasi_diodu(2);
+
+
+
+
+}
+    else test_mode_on = 0;
+
+}
+
+
+void Dialog::dugme_pritisnuto(int dugme) //ovde ce test da proverava da li je dobro dugme prit.
+{
+    //disconnect (this,&Dialog::button_pressed,this,&Dialog::dugme_pritisnuto);
+
+    if (test_mode_on == 1)
+    {
+        QString string ("file:///home/pi/Desktop/");
+        QUrl url;
+        QSoundEffect efekat (this);
+
+        if (tacan_odgovor==dugme)
+        {
+            QMessageBox mb_tacno (QMessageBox::Information,"Congrats!","That is the correct answer",QMessageBox::Close,this,Qt::Dialog);
+            mb_tacno.setDefaultButton(QMessageBox::Close);
+            mb_tacno.setEscapeButton(QMessageBox::Close);
+
+            string.append("correct.wav");  //sviraj nesto, dioda zelena
+            url = QUrl (string);
+            efekat.setSource(url);
+            efekat.play();
+
+            this->upali_diodu(1);
+
+            mb_tacno.exec();
+
+            this->ugasi_diodu(1);
+
+            test_mode_on = 0;
+            ui->pushButton_test->setChecked(0);
+            ui->pushButton_play->setChecked(0);
+
+        }
+        else if (tacan_odgovor != dugme && dugme!= 0)
+        {
+            QMessageBox mb_pogr (QMessageBox::Warning,"Too bad!","Better luck next time!",QMessageBox::Close,this,Qt::Dialog);
+            mb_pogr.setDefaultButton(QMessageBox::Close);
+            mb_pogr.setEscapeButton(QMessageBox::Close);
+
+            string.append("wrong.wav");
+            url = QUrl (string);
+            efekat.setSource(url);
+            efekat.play();
+
+            this->upali_diodu(0);
+
+            mb_pogr.exec();
+
+            this->ugasi_diodu(0);
+
+            test_mode_on = 0;
+            ui->pushButton_test->setChecked(0);
+            ui->pushButton_play->setChecked(0);
+        }
+
+    }
+
+ /*   if (rec_mode_on)
+    {
+
+
+
+        odsvirano_memory[i_mem] = dugme;
+        qDebug()<<"U niz upisano" <<odsvirano_memory[i_mem];
+
+        i_mem++; //treba prebrisati vrednosti kasnije
+        if (i_mem==BUFFER)
+        {
+                rec_mode_on = 0;
+                play_mode_on = 1;
+                ui->pushButton_rec->setChecked(0);
+                ui->pushButton_play->setChecked(1);
+                i_mem=0;
+        }
+
+    }
+*/
+    if (play_mode_on)
+    {
+        /*
+       ui->pushButton_rec->setChecked(0);
+       ui->pushButton_test->setChecked(0); //iskljucivost vec imam
+
+        if (!playlist->isEmpty()) // ako u memoriji ima makar jedan el
+        {
+            //QMediaPlayer
+            QMediaPlayer player (this,QMediaPlayer::LowLatency);
+            player.setAudioRole(QAudio::SonificationRole); //zvuci interfejsa
+            player.setPlaybackRate(1); //dodaj unos za bpm!
+
+
+            playlist->setPlaybackMode(QMediaPlaylist::Sequential); //jedan za drugim se pusta
+
+            //QList <QMediaContent> lista; polje
+            //QUrl file_url;
+           // QMediaContent content (); u konstruktor ide qurl elemnta koji ubacujemo u playlist
+
+
+            playlist->setCurrentIndex(1);
+
+            player.setPlaylist(playlist);
+            player.setVolume(qRound(jacina_note()*100));
+
+            qDebug()<<player.errorString();
+
+            player.play();
+
+
+
+        }
+
+        */
+
+
+    }
+
+  //  connect (this,&Dialog::button_pressed,this,&Dialog::dugme_pritisnuto);
+
+
+}
+
+
+ void Dialog::rec_mod (bool pritisnuto) //kad je rec dugme trigerovano
+ {
+
+        if (pritisnuto)
+        {
+            ui->pushButton_play->setChecked(0);
+            ui->pushButton_test->setChecked(0); // iskljucivost
+
+
+
+        rec_mode_on = 1;
+        test_mode_on = 0;
+        play_mode_on = 0;
+
+        }
+        else
+        {
+            rec_mode_on = 0;
+            i_mem = 0;
+        }
+
+
+ }
+
+
+ void Dialog::play_mod (bool pritisnuto)
+ {
+    if(pritisnuto)
+    {
+        ui->pushButton_test->setChecked(0);
+        ui->pushButton_rec->setChecked(0);
+
+        play_mode_on = 1;
+        test_mode_on = 0;
+        rec_mode_on = 0;
+
+        if (odsvirano_memory[0]!=-1) //znaci da je nesto snimljeno
+
+        {
+
+
+            //sviraj memoriju
+            int n=1;
+            for (int i =0;i<BUFFER;i++)
+            {
+                if (odsvirano_memory[i]==-1) {n=i; break;}
+            }
+            if (odsvirano_memory[BUFFER-1]!=-1) n=BUFFER; //pun
+
+            odsvirano_memory_n = n;
+
+            do_on_press(odsvirano_memory[i_play++]);
+            delay(100);
+           // i_play++;
+
+
+            {
+               //disconnect (this,&Dialog::button_pressed,this,&Dialog::do_on_press); //nema ulaza dok se pusta podrazumeva se
+                //treba sacekati da se izvrsi jedan
+               //while (!thread_fin);
+               //delay(2000);
+            }
+
+           // connect (this,&Dialog::button_pressed,this,&Dialog::do_on_press);
+
+
+        }
+        else
+        {
+            odsvirano_memory_n = 0;
+            i_play = 0;
+        }
+
+
+        //play_mode_on = 0;
+        //inic_memorije();
+
+    }
+
+    else //nije pritisnuto
+    {
+        play_mode_on = 0;
+
+
+        i_play = 0;
+
+    }
+ }
+
+
+ void Dialog::inic_memorije () // delete later
+ {
+     for (int k=0;k<BUFFER;k++)
+     {
+         odsvirano_memory[k]=-1; // po pod. vr. puni -1-cama
+        // jacine_memory[k]=-1;
+     }
+
+ }
+
+
+ double Dialog::scale_volume (double volumeslider) // ne koristim
+ {
+     double linear_volume = QAudio::convertVolume(volumeslider/double(1.0),QAudio::LogarithmicVolumeScale,QAudio::LinearVolumeScale);
+     return linear_volume;
+ }
+
+
+  void Dialog::thread_done ( )
+{
+    thread_fin = 1;
+
+
+    if (ui->pushButton_play->isChecked())
+    {
+       // qDebug()<<"Izvrsio se thread_done";
+        if (i_play<odsvirano_memory_n)
+        {
+            do_on_press(odsvirano_memory[i_play++]);
+            delay(100);
+        }
+        if (i_play==odsvirano_memory_n)
+        {
+            i_play = 0;
+            //inic_memorije ();
+            ui->pushButton_play->setChecked(0);
+        }
+
+
+
+    }
+
+ }
+
+  void Dialog::pisi_u_mem (bool recording, int but)
+  {
+      if (recording)
+      {
+
+
+
+
+              odsvirano_memory[i_mem] = but;
+              qDebug()<<"U niz upisano" <<odsvirano_memory[i_mem];
+
+              i_mem++; //treba prebrisati vrednosti kasnije
+              if (i_mem==BUFFER)
+              {
+                      rec_mode_on = 0;
+                      play_mode_on = 1;
+                      ui->pushButton_rec->setChecked(0);
+                      ui->pushButton_play->setChecked(1);
+                      i_mem=0;
+              }
+
+
+      }
+
+  }
+
+  void Dialog::sviraj_pauzu()
+  {
+
+            QString ime_sampla ("file:///home/pi/Desktop/silent_note.wav");
+            QUrl url_sampla= QUrl(ime_sampla);
+            zvuk->setSource(url_sampla);
+            zvuk->setMuted(false);
+            //qDebug()<<"Status "<<zvuk->status();
+            zvuk->play();
+            delay(50);
+
+
+  }
