@@ -260,7 +260,7 @@ protected:
     const char led [3] = {25,24,23}; // crvena, zelena, plava
     const char note_names_sharp [12][3] = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"}; // imena nota sarp mod
     const char note_names_flat [12][3] = {"C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"}; // imena nota flat mod
-    const char major_scale_names_sharp [8][9] = {"C Major","D Major","E Major","G Major","A Major","B Major","F# Major","C# Major"}; // imena skala sharp mod
+    const char major_scale_names_sharp [8][9] = {"C Major","G Major","D Major","A Major","E Major","B Major","F# Major","C# Major"}; // imena skala sharp mod
     const char major_scale_names_flat [8][9] = {"C Major","F Major","Bb Major","Eb Major","Ab Major","Cb Major","Gb Major","Db Major"}; // imena skala flat mod
     const char minor_scale_names_sharp [8][9] = {"A Minor","E Minor","B Minor","F# Minor","C# Minor","G# Minor","D# Minor","A# Minor"}; //////////////
     const char minor_scale_names_flat [8][9] = {"A Minor", "D Minor","G Minor","C Minor", "F Minor","Ab Minor","Eb Minor","Bb Minor"};

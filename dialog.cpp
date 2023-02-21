@@ -136,6 +136,19 @@ Dialog::Dialog(QWidget *parent) :  //konstruktor
 
     this->inic_memorije(); // inic. dva pom. niza za rec mod
 
+    /*
+    ui->pushButton_rec->setStyleSheet("background-color: red"); // crveno dugme
+    ui->pushButton_play->setStyleSheet("background-color: green");
+    ui->pushButton_test->setStyleSheet("background-color: blue");
+    */
+
+    for (int i=0;i<3;i++) // pali diode na poc programa
+        upali_diodu(i);
+    delay (1000);
+    for (int i=0;i<3;i++)
+        ugasi_diodu(i);
+
+
 }
 
 
@@ -447,13 +460,13 @@ void Dialog::puni_p_meni_minor( ) //slot
     if (c->count()!=0) c->clear();
     for (int i=0;i<8;i++) // puni sa minor imenima
     {
-        if (sharp_or_flat==sharp)
+        if (ui->radioButton_sharp->isChecked()) //sharp
         {
 
             QString string_sharp (minor_scale_names_sharp[i]);
             c->insertItem(i+1,string_sharp,0); // ubacivanje imena nota u padajuci meni
         }
-        if (sharp_or_flat==flat)
+        else if (ui->radioButton_flat->isChecked())
         {
             QString string_flat (minor_scale_names_flat[i]);
             c->insertItem(i+1,string_flat,0);
@@ -895,6 +908,8 @@ void Dialog::sviraj_notu_labele(QComboBox *c)
         octave--;
         bio_u_petlji=0;
     }
+
+
     ime_sampla.append(".wav");
     qDebug()<<ime_sampla;
     //ime_sampla.prepend("qrc:///samples/");  // resource file - previse velik za sve samplove!
