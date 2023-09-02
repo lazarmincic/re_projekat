@@ -7,9 +7,9 @@ int main(int argc, char *argv[])
 {
 
 
-    if(wiringPiSetup())
+ /*   if(wiringPiSetup())  wiringpi ne moze na windows
         return 1;
-
+*/
     QApplication a(argc, argv);
     Dialog w;
 

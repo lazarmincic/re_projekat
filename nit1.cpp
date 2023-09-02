@@ -25,7 +25,7 @@ void Nit1:: oboji(){
     else if (dia->play_mode_on) dioda = 1;
 
     dia->upali_diodu(dioda);
-    delay(1000);
+    //delay(1000);  wiringpi ne moze na windows
     dia->izbledi_note();
     dia->ugasi_diodu(dioda);
 

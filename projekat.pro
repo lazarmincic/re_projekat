@@ -5,12 +5,13 @@
 #-------------------------------------------------
 
 QT       += core gui
-LIBS += -L/usr/local/lib -lwiringPi
+#LIBS += -L/usr/local/lib -lwiringPi        wiringpi ne moze na windows
 QT += gui
 QT += multimedia
 QT += widgets multimedia
 QT += widgets
 QT += multimediawidgets
+QT += serialport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 

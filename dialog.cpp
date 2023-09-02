@@ -144,7 +144,7 @@ Dialog::Dialog(QWidget *parent) :  //konstruktor
 
     for (int i=0;i<3;i++) // pali diode na poc programa
         upali_diodu(i);
-    delay (1000);
+  //  delay (1000);  wiringpi ne moze na windows
     for (int i=0;i<3;i++)
         ugasi_diodu(i);
 
@@ -165,13 +165,17 @@ Dialog::~Dialog()
 
 
 void Dialog::detect_press() // izvrsava se svakih reff_rate
+
+// emituje signal button_pressed(i) gde je i pritisnuto dugme od 1-7, 0 je pauza
+
 {
     for(int i=0;i<8;i++)
     {
-        if (digitalRead(button[i])){
+       /* if (digitalRead(button[i])){  wiringpi ne moze na windows
 
             emit (button_pressed(i)); // 0 pauza 1-7 dugme
             }
+        */
     }
 
 }
@@ -221,11 +225,11 @@ void Dialog::do_on_press(int but_num)
 
 void Dialog::iNit1ialize_gpio()
 {
-    for (int i = 0;i<8;i++)
-        pinMode (button[i],INPUT);
+ /*   for (int i = 0;i<8;i++)
+       pinMode (button[i],INPUT);       wiringpi ne moze na windows
     for (int i = 0;i<3;i++)
-        pinMode (led[i], OUTPUT);
-
+       pinMode (led[i], OUTPUT);        wiringpi ne moze na windows
+*/
 
 }
 
@@ -832,16 +836,21 @@ void Dialog::move_vslider (int pot_val)
 
 void Dialog::discharge()
 {
+ /*      wiringpi ne moze na windows
+
     pinMode(a_pin,INPUT);
     pinMode(b_pin,OUTPUT);
     digitalWrite(b_pin,0);
     delay(5); // 5ms
 
+*/
 
 }
 
 int Dialog::charge_time()
 {
+/*   wiringpi ne moze na windows
+
     pinMode(b_pin,INPUT);
     pinMode(a_pin,OUTPUT);
     int count = 0; // counter
@@ -850,6 +859,9 @@ int Dialog::charge_time()
         count++;
     return count;
 
+*/
+
+    return 0;  //krpa
 }
 
 int Dialog::analogread()
@@ -996,12 +1008,12 @@ void Dialog::promeni_oktavu (int broj)
 
 void Dialog::upali_diodu(int i)
 {
-    digitalWrite(led[i],1);
+ //   digitalWrite(led[i],1);    wiringpi ne moze na windows
 }
 
 void Dialog::ugasi_diodu(int i)
 {
-    digitalWrite(led[i],0);
+//    digitalWrite(led[i],0);    wiringpi ne moze na windows
 }
 
 
@@ -1040,7 +1052,7 @@ void Dialog::test_mod (bool pritisnuto){
     tacan_odgovor = qrand() % 7 + 1; // od 1 do 7
     this->sviraj(tacan_odgovor); //
     this->upali_diodu(2); //plava
-    delay(1000);
+//    delay(1000);       wiringpi ne moze na windows
     this->ugasi_diodu(2);
 
 
@@ -1225,7 +1237,7 @@ void Dialog::dugme_pritisnuto(int dugme) //ovde ce test da proverava da li je do
             odsvirano_memory_n = n;
 
             do_on_press(odsvirano_memory[i_play++]);
-            delay(100);
+ //           delay(100);        wiringpi ne moze na windows
            // i_play++;
 
 
@@ -1292,7 +1304,7 @@ void Dialog::dugme_pritisnuto(int dugme) //ovde ce test da proverava da li je do
         if (i_play<odsvirano_memory_n)
         {
             do_on_press(odsvirano_memory[i_play++]);
-            delay(100);
+ //           delay(100);    wiringpi ne moze na windows
         }
         if (i_play==odsvirano_memory_n)
         {
@@ -1342,7 +1354,7 @@ void Dialog::dugme_pritisnuto(int dugme) //ovde ce test da proverava da li je do
             zvuk->setMuted(false);
             //qDebug()<<"Status "<<zvuk->status();
             zvuk->play();
-            delay(50);
+//            delay(50);     wiringpi ne moze na windows
 
 
   }

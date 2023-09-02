@@ -2,7 +2,7 @@
 #define DIALOG_H
 
 #include <QDialog>
-#include "wiringPi.h"
+//#include "wiringPi.h" wiringpi ne moze na windows
 #include <QPixmap>
 #include <QThread>
 //#include <QMetaObject>
@@ -22,6 +22,8 @@
 #include <QMediaPlayer>
 #include <QByteArray>
 #include <QBuffer>
+#include <QSerialPort>
+#include <QSerialPortInfo>
 
 #include <stdio.h>
 #include <string.h>

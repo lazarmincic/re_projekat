@@ -54,7 +54,7 @@ while (1)
                         if((sr_vr < dia->pot_min + temp*dia->pot_step ) || (sr_vr > dia->pot_min + (temp-1)*dia->pot_step)) {out = temp-0.5; break; }
                         temp++;
                     }
-                  /*  if      (sr_vr < dia->pot_min + temp*dia->pot_step) {sr_vr = i; temp++; i++;} // temp mora biti manje od step-1 (7 u ovom slucaju) i mora biti manje od step
+                    if      (sr_vr < dia->pot_min + temp*dia->pot_step) {sr_vr = i; temp++; i++;} // temp mora biti manje od step-1 (7 u ovom slucaju) i mora biti manje od step
                     else if (sr_vr < dia->pot_min + 2.5*dia->pot_step i pot_min + 1.5*pot_step) sr_vr = 2;
                     else if (sr_vr < dia->pot_min + 3.5*dia->pot_step) sr_vr = 3;
                     else if (sr_vr < dia->pot_min + 4.5*dia->pot_step) sr_vr = 4;
